@@ -1,0 +1,20 @@
+(() => {
+'use strict';
+const POINTS=[25,18,15,12,10,8,6,4,2,1],TOTAL=8,key='openwheels-league-v1';
+const names=['Kıyı Grand Prix','Çamlık Grand Prix','Kanyon Grand Prix','Liman Grand Prix','Yayla Grand Prix','Vadi Grand Prix','Göl Grand Prix','Final Grand Prix'];
+let data=null,storageError=false;
+try{const saved=JSON.parse(localStorage.getItem(key));if(saved&&saved.version===1&&Array.isArray(saved.results)&&saved.results.length<=TOTAL&&Array.isArray(saved.drivers)&&saved.drivers.length===22)data=saved;}catch(_){}
+if(data && (data.season||1)!==RaceCareer.data.season)data=null;
+function persist(){try{localStorage.setItem(key,JSON.stringify(data));storageError=false;}catch(_){storageError=true;}}
+function start(entrants,player){if(data)return;data={version:1,season:RaceCareer.data.season,player,drivers:entrants.map(d=>({id:d.id,name:d.name,code:d.code,team:d.team.slug,teamName:d.team.name})),results:[],seed:Math.floor(Math.random()*1e8)};persist();}
+function compare(a,b){if(a.points!==b.points)return b.points-a.points;for(let i=0;i<22;i++){const delta=(b.places[i]||0)-(a.places[i]||0);if(delta)return delta;}return 0;}
+function table(byTeam=false){if(!data)return[];const rows=new Map();data.drivers.forEach(d=>{const id=byTeam?d.team:d.id;if(!rows.has(id))rows.set(id,{id,name:byTeam?d.teamName:d.name,code:d.code,team:d.team,points:0,places:Array(22).fill(0)});});data.results.forEach(r=>r.forEach((entry,i)=>{const d=data.drivers.find(d=>d.id===entry.id),row=rows.get(byTeam?d.team:d.id);if(entry.finished){row.points+=POINTS[i]||0;row.places[i]++;}}));return [...rows.values()].sort((a,b)=>compare(a,b)||a.name.localeCompare(b.name));}
+function record(round,results){if(!data||round!==data.results.length||round>=TOTAL)return false;if(results.length!==22||new Set(results.map(r=>r.id)).size!==22||results.some(r=>!data.drivers.some(d=>d.id===r.id)))throw Error('Geçersiz yarış sonucu');data.results.push(results);persist();return true;}
+function random(){let seed=(data?.seed||1)+(data?.results.length||0)*9187;return()=>{seed=(Math.imul(1664525,seed)+1013904223)>>>0;return seed/4294967296;};}
+function render(){const panel=document.getElementById('season-panel');if(!panel)return;const round=data?.results.length||0;document.getElementById('season-label').textContent=round===TOTAL?`Sezon ${RaceCareer.data.season} tamamlandı`:`Sezon ${RaceCareer.data.season} · ${round+1} / ${TOTAL} · ${names[round]}`;const drivers=table(),teams=table(true);const message=document.getElementById('season-message');message.textContent=data&&round===TOTAL?`${drivers.filter(d=>compare(d,drivers[0])===0).map(d=>d.name).join(' / ')} · Pilotlar şampiyonu | ${teams.filter(d=>compare(d,teams[0])===0).map(d=>d.name).join(' / ')} · Takımlar şampiyonu${drivers.filter(d=>compare(d,drivers[0])===0).some(d=>d.id===data.player)?' · Şampiyon sensin!':''}`:'';if(storageError)message.textContent+=' Kayıt kullanılamıyor; bu oturum açıkken devam edebilirsin.';
+for(const [id,list]of [['season-drivers',drivers],['season-teams',teams]]){const body=document.getElementById(id);body.replaceChildren();list.forEach((entry,index)=>{const row=document.createElement('tr');if(entry.id===data.player)row.className='you';const rank=list.findIndex(d=>compare(d,entry)===0)+1;row.innerHTML=`<td>${rank}</td><td><img src="assets/teams/${entry.team}.svg" alt=""> <span></span></td><td>${entry.points}</td><td>${entry.places[0]}</td>`;row.querySelector('span').textContent=entry.name;body.append(row);});}
+document.getElementById('season-empty').hidden=!!data;RaceCareer.render();
+document.getElementById('season-history').textContent=data?.results.map((r,i)=>`${i+1}. ${names[i]} · ${data.drivers.find(d=>d.id===r[0].id).name} kazandı`).join('\n')||'';
+}
+window.RaceLeague={POINTS,TOTAL,names,start,record,table,compare,random,render,get data(){return data;},get active(){return !!data&&data.results.length<TOTAL;},reset(){data=null;try{localStorage.removeItem(key);}catch(_){}render();}};
+})();

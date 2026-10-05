@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f5f4ef">
+  <title>OpenWheels · Şampiyona</title>
+  
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <svg class="sprite" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><symbol id="racecar" viewBox="0 0 100 40">
+    <g fill="#292d29"><rect x="17" y="1" width="17" height="10" rx="3"/><rect x="17" y="29" width="17" height="10" rx="3"/><rect x="70" y="2" width="13" height="9" rx="2"/><rect x="70" y="29" width="13" height="9" rx="2"/></g>
+    <g stroke="#464b42" stroke-width="2"><path d="M26 8v24M74 8l-15 12 15 12" fill="none"/></g>
+    <path d="M13 12h26l17 4 30 2v4l-30 2-17 4H13z" fill="currentColor"/>
+    <path d="M27 9h20l11 7v8l-11 7H27l-7-7v-8z" fill="currentColor"/>
+    <rect x="9" y="5" width="7" height="30" rx="1.5" fill="currentColor"/><rect x="85" y="7" width="5" height="26" rx="1" fill="currentColor"/>
+    <path d="M12 8v24M87 10v20M29 12h15M29 28h15" stroke="var(--accent, #fff)" stroke-width="2.5"/>
+    <ellipse cx="49" cy="20" rx="9" ry="5" fill="#252c2a"/><circle cx="47" cy="20" r="3.3" fill="#eee9cf"/>
+    <path d="M53 15q7 5 0 10" fill="none" stroke="currentColor" stroke-width="2"/><path d="M60 20h18" stroke="var(--accent, #fff)" stroke-width="2"/>
+  </symbol></svg>
+  <div class="page">
+
+    <main>
+      <div class="intro"><h1>Open<span>Wheels.</span></h1><svg id="track-map" viewBox="0 0 180 80" role="img" aria-label="Pist haritası: kırmızı nokta sen, turuncu bölüm mevcut görüş alanın"><path class="map-route" d="M12 40H168"/><path class="map-visible"/><circle class="map-start" cx="12" cy="40" r="2.5"/><circle class="map-finish" cx="168" cy="40" r="3"/><circle class="map-player" cx="12" cy="40" r="4"/></svg></div>
+<div id="race-celebration" class="race-celebration" role="status" hidden><span class="winner-trophy" aria-hidden="true">🏆</span><img class="winner-logo" alt=""><div><small class="winner-race"></small><p>YARIŞIN KAZANANI</p><strong class="winner-name"></strong><span class="winner-team"></span></div><span class="winner-sparks" aria-hidden="true">✦ · ✧<br> · ✦ ·</span></div>
+      <div class="race-start"><div class="start-lights" aria-hidden="true"><i class="start-light"></i><i class="start-light"></i><i class="start-light"></i><i class="start-light"></i><i class="start-light"></i></div><p class="race-info mono" id="race-info">22 pilot · 8 yarış</p><p class="race-info mono" id="launch-info">Işıklar sönünce → · hızlı tepkiye kalkış bonusu</p><div id="race-result" class="race-result" role="status" hidden></div></div>
+<section class="telemetry" aria-label="Sürüş göstergeleri">
+ <div class="speed-instrument"><div class="instrument-label">ANLIK HIZ</div><div class="speed-value"><strong id="speed">0</strong><span>km/sa</span></div><progress id="speed-meter" value="0" max="380" aria-label="Hız göstergesi"></progress><span id="selected-team">PİLOT</span></div>
+ <div class="corner-instrument"><span id="turn-arrow" aria-hidden="true">↗</span><div><div class="instrument-label" id="turn-label">SIRADAKİ VİRAJ</div><div class="corner-value" id="turn-distance">— <small>m</small></div><div id="corner-info">Start bekleniyor</div></div><progress id="turn-meter" value="0" max="500" aria-label="Viraja yaklaşma göstergesi"></progress></div>
+ <div class="energy-instrument"><div class="instrument-label">ERS <strong id="energy-text">100%</strong></div><progress id="energy-bar" max="100" value="100" aria-label="ERS enerjisi"></progress><div id="driving-info">ERS hazır</div></div>
+ <span hidden><strong id="score">0</strong><strong id="best">0</strong></span>
+</section>
+      <div class="race-stage"><div class="race-track">
+      <div class="circuit" tabindex="0" role="region" aria-label="Yarış pisti" aria-describedby="game-help">
+        <div class="corner-zone" id="corner-zone" hidden></div><div class="finish"></div>
+        <div class="lane"></div><div class="lane"></div><div class="lane"></div>
+      </div>
+      <div class="controls"><span class="status mono" id="status">Hazır</span><span class="divider"></span><button id="toggle" type="button" aria-pressed="false"><svg class="control-icon" viewBox="0 0 12 12" aria-hidden="true"><path id="control-path" d="M3 2v8M8 2v8" fill="none" stroke="currentColor" stroke-width="2"/></svg><span id="control-label">Duraklat</span></button></div>
+      <div class="game-actions"><button id="brake" type="button" aria-label="Yavaşla" title="Yavaşla" disabled>←</button><button id="up" type="button" aria-label="Üst şeride geç" disabled>↑</button><button id="start" class="primary" type="button">Yarışa başla</button><button id="down" type="button" aria-label="Alt şeride geç" disabled>↓</button><button id="accelerate" type="button" aria-label="Hızlan" title="Hızlan" disabled>→</button><button id="ers" type="button" aria-label="ERS boost, basılı tut" aria-pressed="false" disabled>ERS · E</button></div>
+      <p class="game-help" id="game-help">↑ ↓ şerit · → gaz · ← fren · E ERS · Boşluk duraklat</p>
+      </div><aside class="leaderboard" aria-labelledby="leaderboard-title"><div class="leaderboard-heading"><h2 id="leaderboard-title">İlk 10</h2><span class="mono">CANLI</span></div><ol id="leaderboard-list" tabindex="0" aria-label="İlk 10 pilotun canlı sıralaması"><li class="leader-placeholder">Yarış bekleniyor.</li></ol></aside></div>
+<section id="season-panel" class="season-panel" aria-labelledby="season-title">
+ <div class="season-heading"><div><h2 id="season-title">Şampiyona</h2><span id="season-label"></span></div><button id="new-season" type="button">Yeni sezon</button></div>
+ <p id="season-message" role="status"></p><div id="career-panel"></div><p id="season-empty">Pilotunu seç ve ilk yarışa başla.</p>
+ <details><summary>Puan durumu</summary><div class="season-tables"><div><h3>Pilotlar</h3><table><thead><tr><th>#</th><th>Pilot</th><th>Puan</th><th>Galibiyet</th></tr></thead><tbody id="season-drivers"></tbody></table></div><div><h3>Takımlar</h3><table><thead><tr><th>#</th><th>Takım</th><th>Puan</th><th>Galibiyet</th></tr></thead><tbody id="season-teams"></tbody></table></div></div><p class="points-note">İlk 10: 25 · 18 · 15 · 12 · 10 · 8 · 6 · 4 · 2 · 1 puan. Eşitlikte en iyi sonuç sayıları belirleyicidir.</p><pre id="season-history"></pre></details>
+</section>
+      <section class="teams" aria-labelledby="teams-title">
+        <div class="teams-heading"><h2 class="mono" id="teams-title">APEX SERIES · 11 takım · 22 pilot</h2></div>
+        <label class="pilot-picker">Pilotun <select id="pilot-select" aria-label="Kontrol edeceğin pilot"></select></label>
+        <ul class="team-list" id="team-list"></ul>
+      </section>
+    </main>
+    
+  </div>
+  <script src="race-roster.js"></script><script src="race-career.js"></script>
+  <script>
+    // Fictional Apex Series roster. Names, colors and marks are original to this project.
+    const teams = RaceRoster.activeTeams();
+    const lanes = [...document.querySelectorAll('.lane')];
+    const speeds = [12, 14, 10];
+    teams.forEach((team, index) => {
+      const laneIndex = index % lanes.length;
+      const count = teams.filter((_, i) => i % lanes.length === laneIndex).length;
+      const runner = document.createElement('div');
+      runner.className = 'runner';
+      runner.title = team.name;
+      runner.style.cssText = `--speed: ${speeds[laneIndex]}s; --delay: ${-(Math.floor(index / 3) + .55) * speeds[laneIndex] / count}s; color: ${team.color}; --accent: ${team.accent}`;
+      runner.innerHTML = `<svg class="car" aria-hidden="true"><use href="#racecar"/></svg><span class="car-label">${team.code}</span>`;
+      lanes[laneIndex].append(runner);
+      const card = document.createElement('li');
+      card.className = 'team-card';
+      card.style.setProperty('--team-color', team.color);
+      card.innerHTML = `<button type="button" class="team-choice" data-team="${index}" aria-label="${team.name} takımını seç" aria-pressed="${index === 0}"><span class="team-logo"><img src="assets/teams/${team.slug}.svg" alt="" width="33" height="33"></span><span class="team-name">${team.name}</span><span class="team-swatch" aria-hidden="true"></span></button>`;
+      document.getElementById('team-list').append(card);
+    });
+    const button = document.getElementById('toggle');
+    function setPaused(paused) {
+      document.body.classList.toggle('paused', paused);
+      button.setAttribute('aria-pressed', String(paused));
+      document.getElementById('control-label').textContent = paused ? 'Devam et' : 'Duraklat';
+      document.getElementById('status').textContent = paused ? 'Duraklatıldı' : 'Hazır';
+      document.getElementById('control-path').setAttribute('d', paused ? 'M4 2l5 4-5 4Z' : 'M3 2v8M8 2v8');
+    }
+    const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+    setPaused(reducedMotion.matches);
+  </script>
+  
+  <script src="race-physics.js"></script>
+  <script src="race-behaviour.js"></script>
+  <script src="race-collisions.js"></script>
+  <script src="race-drivers.js"></script>
+  <script src="roster-panel.js"></script>
+  <script src="race-track.js"></script><script src="race-league.js"></script><script src="race-cooldown.js"></script><script src="game.js"></script>
+</body>
+</html>

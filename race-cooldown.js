@@ -1,0 +1,4 @@
+(() => {
+function step(cars,dt){const queue=[...cars].sort((a,b)=>b.distance-a.distance);for(const car of queue){if(car.finishTime==null)continue;const leader=queue.filter(other=>other!==car&&other.distance>car.distance&&Math.abs(other.visualLane-car.visualLane)<.65).sort((a,b)=>a.distance-b.distance)[0];let target=110;if(leader)target=Math.min(target,Math.max(0,leader.velocity+(leader.distance-car.distance-30)*1.5));const rate=target<car.velocity?35:15;car.velocity+=Math.sign(target-car.velocity)*Math.min(Math.abs(target-car.velocity),rate*dt);const travel=car.velocity/3.6*dt;car.distance+=leader?Math.min(travel,Math.max(0,leader.distance-car.distance-24)):travel;}}
+window.RaceCooldown={step};
+})();
