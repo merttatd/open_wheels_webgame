@@ -67,12 +67,6 @@ Kariyer, kadro ve sezon ilerlemesi tarayıcının `localStorage` alanında sakla
 
 Takım ve pilotları `race-roster.js`, sezon performans modelini `race-career.js`, sürüş davranışını `race-behaviour.js` üzerinden düzenleyebilirsiniz. Script yükleme sırasını koruyun.
 
-## GitHub'a yükleme
-
-Bu klasörün **tüm içeriğini**, `assets/teams/` klasör yapısını koruyarak yükleyin. `.gitignore` dosyasını da ekleyin. `backup-*`, eski `.webp` logoları, yerel test çıktıları ve ZIP dosyaları gerekli değildir.
-
-Temiz dağıtım paketinde 12 JavaScript dosyası, `index.html`, `styles.css`, 17 SVG logo, bu README ve `.gitignore` bulunur. NPM bağımlılığı yoktur.
-
 ## Kontrol listesi
 
 - Masaüstü ve telefon genişliklerinde pistin iki kenara ulaşması ve yatay taşma olmaması.
@@ -82,9 +76,6 @@ Temiz dağıtım paketinde 12 JavaScript dosyası, `index.html`, `styles.css`, 1
 
 Depoda otomatik test çalıştırıcısı yoktur; geliştirme kontrolleri tarayıcıda yapılmıştır.
 
-## Lisans
-
-Henüz bir açık kaynak lisansı seçilmemiştir. Depoyu GitHub'da paylaşmak tek başına kullanım veya yeniden dağıtım lisansı vermez. Yayınlamadan önce proje sahibi uygun lisansı belirlemelidir.
 ## Öğrenen rakipler
 
 Rakip analizi panelinden öğrenmeyi açabilir/kapatabilir ve kariyer puanlarını silmeden modelleri sıfırlayabilirsiniz. Öğrenme varsayılan olarak açıktır. Ayarlar yarış sırasında kilitlenir.
