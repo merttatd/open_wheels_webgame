@@ -32,6 +32,7 @@
     };
   }
   function speedPlan(car, leader, elapsed, safeGap, corners = [], vehicles = [], canMerge = () => false) {
+    safeGap += RaceLearning.followingExtra(leader);
     const driver = car.driver;
     if (elapsed < driver.reaction) return { target: 0, acceleration: 0, boost: false, mode: 'START', ers: false, braking: false, drafting: false };
     const road = RacePhysics.trackAt(car.distance, corners);
@@ -40,7 +41,7 @@
     const attacker = vehicles.some(other => other !== car && other.distance < car.distance && car.distance - other.distance < 65 && occupies(other, car.lane));
     const exit = road.previous && car.distance - road.previous.end < 150;
     const traffic = assessTraffic(car, vehicles, canMerge);
-    const saving = traffic.boxed && elapsed > 3 && gap < safeGap + 50 && car.velocity >= leader.velocity - 5;
+    const saving = !!leader && elapsed > 3 && ((traffic.boxed && gap < safeGap + 50 && car.velocity >= leader.velocity - 5) || (car.learningAction === 'save' && car.learningUntil > elapsed && RaceLearning.enabled && gap < 150));
     const attack = !!(leader && gap > 40 && gap < 150 && (traffic.passing || car.shift));
     const braking = car.velocity > road.brakingLimit - 3;
     const ers = !saving && !braking && !road.current && car.incident === 0 && !car.ersLocked && car.energy > 0 && (car.ersActive || car.energy > 25) && (attack || exit || attacker);
@@ -61,8 +62,9 @@
     if (car.shift && !road.current && car.incident === 0) mode = 'SOLLAMA';
     if (car.incident > 0) { target = Math.min(target, driver.cruiseSpeed * .35); mode = 'KAYMA!'; }
     return { target, acceleration: driver.acceleration + (boost ? 65 : 0) + (ers ? 35 : 0), boost, mode, ers, braking: braking || (target < car.velocity - 10 && !saving), throttle: !saving, coasting: saving && !braking, drafting };
-  }  function chooseLane(car, vehicles, canMerge, random = Math.random) {
+  }  function chooseLane(car, vehicles, canMerge, random = Math.random, corners = []) {
     if (car.shift || car.incident > 0) return null;
+    const learned=RaceLearning.choose(car,vehicles,canMerge,corners,random);if(learned!==undefined)return learned.lane;
     const traffic = assessTraffic(car, vehicles, canMerge);
     if (traffic.constrained && traffic.passing) return traffic.passing.row;
     // After an overtake, settle into an open lane; never weave into a closed gap.

@@ -53,6 +53,7 @@
     const me = { id: playerEntry().id, distance: playerDistance, velocity, visualLane: playerMotion.visualLane + playerSlipOffset / 68, finishTime: playerFinishTime, node: player, isPlayer: true };
     const all = [me, ...traffic];
     collisionSystem.step(all, dt, elapsed, (rear, front) => {
+      RaceLearning.contact(rear,front);
       for (const hit of [rear, front]) {
         hit.node.classList.add('contact-hit');
         if (hit.isPlayer) {
@@ -253,12 +254,12 @@
   }
   function finalizeRace(){
     const order=standings(),rank=order.findIndex(entry=>entry.isPlayer)+1,awarded=RaceLeague.POINTS[rank-1]||0;
-    RaceLeague.record(leagueRound,order.map(entry=>({id:entry.racer.id,finished:entry.finishTime!==null,time:entry.finishTime})));RaceLeague.render();
+    const recorded=RaceLeague.record(leagueRound,order.map(entry=>({id:entry.racer.id,finished:entry.finishTime!==null,time:entry.finishTime})));if(recorded)RaceLearning.finish([...traffic,playerVehicle()],elapsed);RaceLeague.render();
     state='over';document.body.classList.remove('crashed');status.textContent='Yarış tamamlandı';updateLeaderboard(true);result.hidden=false;result.textContent=`${rank}. sıra · +${awarded} puan · ${clockText(playerFinishTime)}`;raceInfo.textContent=`${RaceLeague.names[leagueRound]} · ${rank}/${entrants.length}`;updateControls();
   }
   function occupied(car) { return car.shift ? [car.shift.from, car.shift.to] : [car.lane]; }
   function sharesLane(a, b) { return occupied(a).some(row => occupied(b).includes(row)); }
-  function playerVehicle() { return { ...playerMotion, visualLane: playerMotion.visualLane + playerSlipOffset / 68, distance: playerDistance, velocity, finishTime: playerFinishTime }; }
+  function playerVehicle() { return { ...playerMotion, visualLane: playerMotion.visualLane + playerSlipOffset / 68, distance: playerDistance, velocity, energy, code:playerEntry().code, id:playerEntry().id, finishTime: playerFinishTime }; }
   function safeToShift(car, target) {
     if (target < 0 || target > 2 || car.shift) return false;
     const neighbors = [...traffic, ...(car === playerMotion ? [] : [playerVehicle()])];
@@ -300,7 +301,7 @@
         car.decisionIn = .6 + Math.random() * .8;
         const nearbyLeader = RaceBehaviour.leaderIn(car, car.lane, [...traffic, playerVehicle()]);
         if (elapsed > 4 && nearbyLeader && nearbyLeader.distance - car.distance < 110 && Math.random() < car.driver.riskAppetite) car.riskUntil = elapsed + 2;
-        const target = RaceBehaviour.chooseLane(car, [...traffic, playerVehicle()], row => car.riskUntil > elapsed ? riskyToShift(car, row) : safeToShift(car, row));
+        const target = RaceBehaviour.chooseLane(car, [...traffic, playerVehicle()], row => RaceLearning.enabled ? safeToShift(car,row) : car.riskUntil > elapsed ? riskyToShift(car, row) : safeToShift(car, row), Math.random, corners);
         if (target !== null && startShift(car, target)) car.decisionIn = 2.5;
       }
     }
@@ -367,6 +368,7 @@
     return node;
   }
   function updateControls() {
+    RaceLearning.setBusy(['running','paused','countdown','finishing'].includes(state));
     RaceRoster.locked = !!RaceLeague.data || ['running', 'paused', 'countdown', 'finishing'].includes(state);
     window.updateRosterLock?.();
     pilotSelect.disabled = RaceRoster.locked;
@@ -465,7 +467,7 @@
     place(player, playerX(), playerMotion.visualLane, playerMotion);
 
     updateTraffic(dt);
-    resolveContacts(dt);cooldown(dt);
+    resolveContacts(dt);RaceLearning.observe([...traffic,playerVehicle()],corners,elapsed);cooldown(dt);
     // Repaint after resolving any contact so every car uses the same camera position.
     updateRoad(0);
     place(player, playerX(), playerMotion.visualLane, playerMotion);
@@ -491,7 +493,7 @@
   let leagueRound = 0;
   function begin() {
     if (RaceLeague.data?.results.length === RaceLeague.TOTAL) return;
-    RaceLeague.start(entrants,playerEntry().id); leagueRound = RaceLeague.data.results.length; RaceLeague.render();
+    RaceLeague.start(entrants,playerEntry().id); leagueRound = RaceLeague.data.results.length; RaceLearning.begin(`${RaceLeague.data.seed}-${RaceLeague.data.season||1}-${leagueRound}`); RaceLeague.render();
     cancelAnimationFrame(frame);celebrated=false;document.getElementById('race-celebration').hidden=true;
     circuit.querySelectorAll('.game-car').forEach(node => node.remove());
     collisionSystem.reset();
@@ -607,6 +609,7 @@
   if(RaceLeague.data){const racer=entrants.find(d=>d.id===RaceLeague.data.player);if(racer){selected=teams.indexOf(racer.team);selectedSeat=racer.seat;document.querySelectorAll('.team-choice').forEach(c=>c.setAttribute('aria-pressed',String(Number(c.dataset.team)===selected)));}}
   document.getElementById('new-season').addEventListener('click',()=>{if(['running','paused','countdown','finishing'].includes(state))return;try{if(RaceLeague.data?.results.length===RaceLeague.TOTAL){RaceCareer.nextSeason(RaceLeague.data);RaceLeague.reset();location.reload();return;}if(RaceLeague.active&&!confirm('Mevcut sezon puanları silinecek. Sezon yeniden başlatılsın mı?'))return;RaceLeague.reset();location.reload();}catch(error){document.getElementById('season-message').textContent='Sezon kaydedilemedi: '+error.message;}});
   if(!RaceLeague.data&&RaceCareer.data.preferredPlayer){const racer=entrants.find(d=>d.id===RaceCareer.data.preferredPlayer);if(racer){selected=teams.indexOf(racer.team);selectedSeat=racer.seat;}}
+  RaceLearning.mount();
   RaceLeague.render();
   document.querySelectorAll('.team-choice').forEach(c=>c.setAttribute('aria-pressed',String(Number(c.dataset.team)===selected)));
   updatePilotSelection();
